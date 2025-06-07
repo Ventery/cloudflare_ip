@@ -4,6 +4,7 @@ import ssl
 import time
 import ipaddress
 import threading
+from scapy.all import IP, ICMP, sr1
 
 threadNum = 50
 all_ips = []
@@ -78,7 +79,20 @@ def tls_handshake(index):
                     continue
             
             if sucssCnt>0:
-                print(f'{target_host}  {sucssCnt}' + "/" +f'{timeCnt}' + "  "+ f'{((sucssCnt / timeCnt) * 100):.2f}' + "%")
+                packet = IP(dst=target_host)/ICMP()
+        
+                # 记录发送时间
+                start_time = time.time()
+                
+                # 发送包并等待响应
+                reply = sr1(packet, timeout=2, verbose=0)
+                
+                relay_time = -1
+                # 计算响应时间
+                if reply:
+                    end_time = time.time()
+                    relay_time = int((end_time - start_time) * 1000)  # 转换为毫秒
+                print(f'{target_host}  {sucssCnt}' + "/" +f'{timeCnt}' + "  "+ f'{((sucssCnt / timeCnt) * 100):.2f}' + "% " + str(relay_time) + "ms")
                 
 if __name__ == "__main__":
     # 示例IP段列表
